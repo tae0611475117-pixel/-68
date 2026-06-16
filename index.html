@@ -25,59 +25,161 @@
             </button>
         </header>
 
+        <div class="flex mt-4 bg-gray-200 dark:bg-gray-800 p-1 rounded-lg">
+            <button id="tabToday" class="flex-1 py-2 text-sm font-medium rounded-md bg-white dark:bg-gray-700 shadow-sm text-center">
+                <i class="fas fa-clock mr-1"></i> เรียนวันนี้
+            </button>
+            <button id="tabSyllabus" class="flex-1 py-2 text-sm font-medium rounded-md text-gray-600 dark:text-gray-400 text-center">
+                <i class="fas fa-book-open mr-1"></i> แผนรายวิชา
+            </button>
+        </div>
+
         <div id="notifyBanner" class="mt-4 bg-yellow-100 dark:bg-yellow-900 text-yellow-800 dark:text-yellow-200 p-3 rounded-lg flex justify-between items-center text-sm hidden">
             <span>เปิดแจ้งเตือนเพื่อไม่พลาดคลาสเรียน</span>
             <button onclick="requestNotifications()" class="font-bold underline">เปิดใช้งาน</button>
         </div>
 
-        <section class="mt-6">
-            <h2 class="text-lg font-semibold mb-3 flex items-center">
-                <i class="fas fa-calendar-day mr-2 text-blue-500"></i> ตารางเรียนวันนี้
-            </h2>
-            <div id="todayClasses" class="space-y-3">
-                </div>
-        </section>
+        <div id="viewToday" class="space-y-6 mt-4">
+            <section>
+                <h2 class="text-lg font-semibold mb-3 flex items-center">
+                    <i class="fas fa-calendar-day mr-2 text-blue-500"></i> ตารางเรียนวันนี้
+                </h2>
+                <div id="todayClasses" class="space-y-3"></div>
+            </section>
 
-        <section class="mt-8 flex-grow">
-            <h2 class="text-lg font-semibold mb-3 flex items-center">
-                <i class="fas fa-stopwatch mr-2 text-red-500"></i> นับถอยหลังสอบ/ส่งงาน
-            </h2>
-            <div id="upcomingEvents" class="space-y-3">
+            <section>
+                <h2 class="text-lg font-semibold mb-3 flex items-center">
+                    <i class="fas fa-stopwatch mr-2 text-red-500"></i> นับถอยหลังสอบ/ส่งงาน
+                </h2>
+                <div id="upcomingEvents" class="space-y-3"></div>
+            </section>
+        </div>
+
+        <div id="viewSyllabus" class="space-y-4 mt-4 hidden">
+            <section>
+                <h2 class="text-lg font-semibold mb-2 flex items-center">
+                    <i class="fas fa-search mr-2 text-green-500"></i> เช็คบทเรียน & อาจารย์
+                </h2>
+                <label for="courseSelect" class="block text-xs text-gray-500 mb-1">เลือกรายวิชาที่ต้องการดู:</label>
+                <select id="courseSelect" class="w-full p-2.5 bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-700 rounded-lg shadow-sm font-medium focus:ring-2 focus:ring-blue-500">
+                    <option value="1502201">1502 201 กายวิภาคศาสตร์และสรีรวิทยา 2 (Lec)</option>
+                    <option value="1502202">1502 202 ปฏิบัติการกายวิภาคศาสตร์ฯ 2 (Lab)</option>
+                    <option value="1502203">1502 203 ชีวเคมีและพันธุศาสตร์ (Lec)</option>
+                    <option value="15022204">1502 2204 ปฏิบัติการชีวเคมีและพันธุศาสตร์ (Lab)</option>
+                    <option value="1503210">1503 210 เภสัชพฤกษศาสตร์ (Lec)</option>
+                    <option value="1503211">1503 211 ปฏิบัติการเภสัชพฤกษศาสตร์ (Lab)</option>
+                    <option value="1501200">1501 200 ความรู้และทักษะพื้นฐานทางเภสัชฯ</option>
+                </select>
+            </section>
+
+            <div id="syllabusTimeline" class="space-y-3 max-h-[50vh] overflow-y-auto pr-1">
                 </div>
-        </section>
+        </div>
         
-        <section class="mt-8 mb-6">
-            <h2 class="text-lg font-semibold mb-3">🔗 Quick Links</h2>
+        <section class="mt-auto pt-6 mb-2">
+            <h2 class="text-sm font-semibold text-gray-400 mb-2">🔗 ทางลัดระบบมหาวิทยาลัย</h2>
             <div class="grid grid-cols-2 gap-3">
-                <a href="https://lms.ubu.ac.th" target="_blank" class="block p-3 bg-white dark:bg-gray-800 rounded-lg shadow-sm text-center font-medium hover:shadow-md transition">UBU LMS</a>
-                <a href="#" class="block p-3 bg-white dark:bg-gray-800 rounded-lg shadow-sm text-center font-medium hover:shadow-md transition">REG UBU</a>
+                <a href="https://lms.ubu.ac.th" target="_blank" class="block p-2.5 bg-white dark:bg-gray-800 rounded-lg shadow-sm text-center text-sm font-medium hover:shadow-md transition border dark:border-gray-700">UBU LMS</a>
+                <a href="https://reg.ubu.ac.th" target="_blank" class="block p-2.5 bg-white dark:bg-gray-800 rounded-lg shadow-sm text-center text-sm font-medium hover:shadow-md transition border dark:border-gray-700">REG UBU</a>
             </div>
         </section>
     </div>
 
     <script>
-        // ข้อมูลตารางเรียนและวันสอบเบื้องต้น 
+        // รวมข้อมูลตารางเรียนรายวัน วันสอบ บทเรียน และอาจารย์ผู้รับผิดชอบจากระบบคอร์สบัส
         const scheduleData = {
             classes: [
                 { id: "1501 200", name: "ความรู้และทักษะพื้นฐานฯ (Lec)", day: 2, start: "09:00", end: "11:00", room: "A203" },
                 { id: "1502 202", name: "ปฏิบัติการกายวิภาคฯ 2", day: 2, start: "13:00", end: "16:00", room: "B301" },
-                { id: "1503 210", name: "เภสัชพฤกษศาสตร์", day: 4, start: "09:00", end: "11:00", room: "On site" },
+                { id: "1503 210", name: "เภสัชพฤกษศาสตร์ (Lec)", day: 4, start: "09:00", end: "11:00", room: "On site" },
                 { id: "1501 200", name: "ความรู้และทักษะพื้นฐานฯ (Lab)", day: 4, start: "13:00", end: "16:00", room: "Lab" },
                 { id: "1502 201-66", name: "กายวิภาคศาสตร์ฯ 2 (Lec)", day: 5, start: "10:00", end: "12:00", room: "A203" }
             ],
             events: [
-                { title: "สอบ Posttest สรีรวิทยา", date: "2026-06-19T20:00:00", type: "Quiz" },
-                { title: "สอบกลางภาค 1501 200", date: "2026-08-13T09:00:00", type: "Exam" },
-                { title: "สอบกลางภาค กายวิภาคฯ 2", date: "2026-08-16T09:00:00", type: "Exam" }
+                { title: "สอบ Posttest 1 ชีวเคมี (หัวข้อ 1-3)", date: "2026-06-26T18:00:00", type: "Quiz" },
+                { title: "สอบ Midterm 1 ชีวเคมี (หัวข้อ 1-7)", date: "2026-07-05T09:00:00", type: "Exam" },
+                { title: "สอบกลางภาค ทักษะพื้นฐานทางเภสัชฯ", date: "2026-08-13T09:00:00", type: "Exam" },
+                { title: "สอบกลางภาคครั้งที่ 1 กายวิภาคฯ 2", date: "2026-08-16T09:00:00", type: "Exam" }
             ]
         };
 
-        // การจัดการวันที่และ UI เบื้องต้น
+        // ฐานข้อมูลเนื้อหารายบทเรียนและอาจารย์ผู้สอนสกัดจากเอกสารคณะ
+        const syllabusData = {
+            "1502201": [
+                { week: "สัปดาห์ที่ 1", topic: "ชี้แจงรายวิชา & 6. Blood and blood coagulation", teacher: "ผศ.ดร.ปาจารีย์ / อ.ดร.พงศ์ปณต / ผศ.ดร.นิภาพร" },
+                { week: "สัปดาห์ที่ 2", topic: "6. Blood and blood coagulation (ต่อ)", teacher: "ผศ.ดร.นิภาพร" },
+                { week: "สัปดาห์ที่ 2-5", topic: "7. Anatomy & physiology of cardiovascular and lymphatic systems", teacher: "ผศ.ดร.ปาจารีย์" },
+                { week: "สัปดาห์ที่ 5-6", topic: "8. Anatomy & physiology of respiratory system", teacher: "อ.ดร.พงศ์ปณต" },
+                { week: "สัปดาห์ที่ 6-7", topic: "9. Anatomy & physiology of urinary system and fluid balance", teacher: "ผศ.ดร.ปาจารีย์" }
+            ],
+            "1502202": [
+                { week: "สัปดาห์ที่ 1", topic: "แนะนำรายวิชาและการจัดการเรียนการสอนและรับคู่มือปฏิบัติการ", teacher: "ผศ.ดร.นิภาพร / อ.ดร.พงศ์ปณต" },
+                { week: "สัปดาห์ที่ 2", topic: "1. Blood analysis and interpretation (PhysioEx 9.1)", teacher: "ผศ.ดร.นิภาพร / ผศ.ดร.ปาจารีย์ / อ.ดร.พงศ์ปณต" },
+                { week: "สัปดาห์ที่ 3", topic: "2. มหกายวิภาคศาสตร์และจุลกายวิภาคศาสตร์ของระบบหัวใจร่วมหลอดเลือดและระบบน้ำเหลือง", teacher: "ผศ.ดร.นงนุช / ผศ.ดร.ปาจารีย์ / ผศ.ดร.นิภาพร" },
+                { week: "สัปดาห์ที่ 4", topic: "3. PhysioEx 9.1: Cardiovascular physiology", teacher: "ผศ.ดร.ปาจารีย์ / ผศ.ดร.นิภาพร / อ.ดร.พงศ์ปณต" },
+                { week: "สัปดาห์ที่ 5", topic: "4. Human cardiovascular function (Auscultation, BP, Fitness)", teacher: "ผศ.ดร.ปาจารีย์ / ผศ.ดร.นิภาพร / อ.ดร.พงศ์ปณต" }
+            ],
+            "1502203": [
+                { week: "สัปดาห์ที่ 1", topic: "แนะนำรายวิชา / 1 บทนำสู่ชีวเคมีและอณูชีววิทยา", teacher: "ผศ.ดร.ธนวดี / รศ.ดร.พรทิพย์" },
+                { week: "สัปดาห์ที่ 1", topic: "2 โครงสร้างและคุณสมบัติของคาร์โบไฮเดรต", teacher: "ผศ.ดร.ไพจิตร" },
+                { week: "สัปดาห์ที่ 2", topic: "3 โครงสร้างและคุณสมบัติของกรดอะมิโนและโปรตีน / 4 กรดนิวคลิอิก", teacher: "ผศ.ดร.ธนวดี" },
+                { week: "สัปดาห์ที่ 3", topic: "5 โครงสร้างและคุณสมบัติของไขมัน", teacher: "ผศ.ดร.ธนวดี" },
+                { week: "สัปดาห์ที่ 3", topic: "6 เอนไซม์ วิตามิน และโคเอนไซม์", teacher: "ดร.ฐิติเดช" }
+            ],
+            "15022204": [
+                { week: "ครั้งที่ 1", topic: "1. บทนำสู่วิชาปฏิบัติการชีวเคมีและพันธุศาสตร์สำหรับนักศึกษาเภสัชศาสตร์", teacher: "รศ.ดร.พรทิพย์ / ผศ.ดร.ธนวดี / ดร.จุฑามาศ / ดร.ฐิติเดช" },
+                { week: "ครั้งที่ 2", topic: "2. Experiment: Structure and chemical properties of carbohydrate, amino acid & protein", teacher: "ผศ.ดร.ธนวดี / ผศ.ดร.ไพจิตร / รศ.ดร.พรทิพย์ / ดร.จุฑามาศ" },
+                { week: "ครั้งที่ 3", topic: "3. Experiment: Structure and chemical properties of lipid and nucleic acid", teacher: "ดร.ฐิติเดช / ผศ.ดร.ธนวดี / ผศ.ดร.ไพจิตร / รศ.ดร.พรทิพย์" }
+            ],
+            "1503210": [
+                { week: "คาบที่ 1", topic: "1. แนะนำวิชาเภสัชพฤกษศาสตร์ (บรรยายภาษาอังกฤษ)", teacher: "ผศ.ดร.กุสุมา" },
+                { week: "คาบที่ 2", topic: "2. สัณฐานวิทยาของพืช 1 (เนื้อเยื่อและสัณฐานวิทยาของ ราก ลำต้น ใบ)", teacher: "ผศ.ดร.สุดารัตน์" },
+                { week: "คาบที่ 3", topic: "3. สัณฐานวิทยาของพืช 2 (ดอก ผลและเมล็ด)", teacher: "ผศ.ดร.นิธิมา / ผศ.ดร.สุวรรณา" },
+                { week: "คาบที่ 4", topic: "4. หลักการทางอนุกรมวิธานพืช", teacher: "รศ.ดร.ระวิวรรณ" }
+            ],
+            "1503211": [
+                { week: "ครั้งที่ 1", topic: "1. ศึกษาสมุนไพรในสวนสมุนไพร คณะเภสัชศาสตร์", teacher: "ผศ.ดร.สุดารัตน์ / รศ.ดร.ระวิวรรณ / ผศ.ดร.กุสุมา" },
+                { week: "ครั้งที่ 2", topic: "2. สัณฐานวิทยาของพืช (1) รากและลำต้น", teacher: "ผศ.ดร.สุดารัตน์ / รศ.ดร.ระวิวรรณ / ผศ.ดร.กุสุมา" },
+                { week: "ครั้งที่ 3", topic: "3. สัณฐานวิทยาของพืช (2) ใบ", teacher: "คณาจารย์ผู้รับผิดชอบร่วมประจำชั้น 3" }
+            ],
+            "1501200": [
+                { week: "9 มิ.ย.", topic: "แนะนำรายวิชา / 1. ความปลอดภัยในห้องปฏิบัติการ Lab Safety (ชีวภาพ)", teacher: "อ.ดร.เศรษฐพงศ์ / อ.พลพันธ์ / ผศ.ดร.ทวีศักดิ์" },
+                { week: "11 มิ.ย.", topic: "2. ความปลอดภัยในห้องปฏิบัติการ Lab Safety (เคมี)", teacher: "ผศ.ดร.ปรีชา" },
+                { week: "16 มิ.ย.", topic: "3. เคมีอินทรีย์ และ สเตอริโอเคมี (Organic Chemistry) 1", teacher: "ผศ.ดร.ปรีชา" },
+                { week: "18 มิ.ย.", topic: "ปฏิบัติการที่ 1 ความปลอดภัยในห้องปฏิบัติการ (Lab Safety) - (เคมี & ชีวภาพ)", teacher: "ผศ.ดร.ทวีศักดิ์ / ผศ.ดร.ปรีชา / ผศ.ดร.กุสุมา" }
+            ]
+        };
+
+        // ตั้งค่าการจัดการวันที่ปัจจุบัน
         const now = new Date();
         const daysThai = ["อาทิตย์", "จันทร์", "อังคาร", "พุธ", "พฤหัสบดี", "ศุกร์", "เสาร์"];
         document.getElementById('currentDate').innerText = `วัน${daysThai[now.getDay()]}ที่ ${now.toLocaleDateString('th-TH', { day:'numeric', month:'long', year:'numeric'})}`;
 
-        // เรนเดอร์คลาสเรียนของวันนี้
+        // ฟังก์ชันสลับแท็บหน้าจอ
+        const tabToday = document.getElementById('tabToday');
+        const tabSyllabus = document.getElementById('tabSyllabus');
+        const viewToday = document.getElementById('viewToday');
+        const viewSyllabus = document.getElementById('viewSyllabus');
+
+        tabToday.addEventListener('click', () => {
+            switchTab(tabToday, tabSyllabus, viewToday, viewSyllabus);
+        });
+
+        tabSyllabus.addEventListener('click', () => {
+            switchTab(tabSyllabus, tabToday, viewSyllabus, viewToday);
+            renderSyllabusTimeline(); // เรนเดอร์ไทม์ไลน์เริ่มต้นเมื่อกดเปิดแถบ
+        });
+
+        function switchTab(activeTab, inactiveTab, activeView, inactiveView) {
+            activeTab.classList.add('bg-white', 'dark:bg-gray-700', 'shadow-sm');
+            activeTab.classList.remove('text-gray-600', 'dark:text-gray-400');
+            inactiveTab.classList.remove('bg-white', 'dark:bg-gray-700', 'shadow-sm');
+            inactiveTab.classList.add('text-gray-600', 'dark:text-gray-400');
+            activeView.classList.remove('hidden');
+            inactiveView.classList.add('hidden');
+        }
+
+        // เรนเดอร์คลาสเรียนรายวันวันนี้
         function renderTodayClasses() {
             const todayDayNum = now.getDay();
             const todayClasses = scheduleData.classes.filter(c => c.day === todayDayNum).sort((a,b) => a.start.localeCompare(b.start));
@@ -91,8 +193,8 @@
             container.innerHTML = todayClasses.map(c => `
                 <div class="p-4 bg-white dark:bg-gray-800 border-l-4 border-blue-500 rounded-lg shadow-sm flex justify-between items-center">
                     <div>
-                        <p class="font-bold text-gray-800 dark:text-gray-100">${c.name}</p>
-                        <p class="text-sm text-gray-500"><i class="fas fa-map-marker-alt"></i> ห้อง: ${c.room}</p>
+                        <p class="font-bold text-gray-800 dark:text-gray-100 text-sm">${c.name}</p>
+                        <p class="text-xs text-gray-500"><i class="fas fa-map-marker-alt mr-1"></i> ห้อง: ${c.room}</p>
                     </div>
                     <div class="text-right">
                         <span class="inline-block px-2 py-1 bg-blue-100 dark:bg-blue-900 text-blue-800 dark:text-blue-200 text-xs font-bold rounded">${c.start} - ${c.end}</span>
@@ -101,7 +203,32 @@
             `).join('');
         }
 
-        // เรนเดอร์วันสอบ
+        // เรนเดอร์ข้อมูลแถบแผนรายวิชา (บทเรียน + อาจารย์ผู้สอน)
+        const courseSelect = document.getElementById('courseSelect');
+        courseSelect.addEventListener('change', renderSyllabusTimeline);
+
+        function renderSyllabusTimeline() {
+            const selectedCourse = courseSelect.value;
+            const timelineContainer = document.getElementById('syllabusTimeline');
+            const topics = syllabusData[selectedCourse] || [];
+
+            if (topics.length === 0) {
+                timelineContainer.innerHTML = `<p class="text-gray-500 text-sm text-center">ไม่มีข้อมูลบทเรียน</p>`;
+                return;
+            }
+
+            timelineContainer.innerHTML = topics.map(t => `
+                <div class="p-3 bg-white dark:bg-gray-800 rounded-lg shadow-sm border border-gray-200 dark:border-gray-700">
+                    <div class="flex justify-between items-center mb-1">
+                        <span class="text-xs font-bold px-2 py-0.5 bg-green-100 dark:bg-green-900 text-green-800 dark:text-green-200 rounded">${t.week}</span>
+                    </div>
+                    <p class="font-semibold text-sm text-gray-800 dark:text-gray-100">${t.topic}</p>
+                    <p class="text-xs text-gray-500 dark:text-gray-400 mt-1"><i class="fas fa-user-tie mr-1"></i> ผู้สอน: ${t.teacher}</p>
+                </div>
+            `).join('');
+        }
+
+        // เรนเดอร์วันสอบและแจ้งเตือนนับถอยหลัง
         function renderUpcomingEvents() {
             const container = document.getElementById('upcomingEvents');
             const futureEvents = scheduleData.events.filter(e => new Date(e.date) > now).sort((a,b) => new Date(a.date) - new Date(b.date));
@@ -119,7 +246,7 @@
                 <div class="p-3 bg-white dark:bg-gray-800 rounded-lg shadow-sm border border-red-100 dark:border-red-900 flex justify-between items-center">
                     <div>
                         <p class="font-bold text-sm">${e.title}</p>
-                        <p class="text-xs text-gray-500">${eventDate.toLocaleDateString('th-TH')} | ${eventDate.toLocaleTimeString('th-TH', {hour: '2-digit', minute:'2-digit'})}</p>
+                        <p class="text-xs text-gray-500">${eventDate.toLocaleDateString('th-TH')} | ${eventDate.toLocaleTimeString('th-TH', {hour: '2-digit', minute:'2-digit'})} น.</p>
                     </div>
                     <div class="text-red-500 font-bold text-sm">
                         อีก ${diffDays} วัน
@@ -128,7 +255,7 @@
             `}).join('');
         }
 
-        // ระบบ Dark Mode
+        // ระบบ Dark Mode สำหรับถนอมสายตา
         const themeToggle = document.getElementById('themeToggle');
         const htmlBody = document.documentElement;
         if (localStorage.theme === 'dark' || (!('theme' in localStorage) && window.matchMedia('(prefers-color-scheme: dark)').matches)) {
@@ -139,7 +266,7 @@
             localStorage.theme = htmlBody.classList.contains('dark') ? 'dark' : 'light';
         });
 
-        // ระบบแจ้งเตือน PWA Notifications
+        // ระบบเว็บสั่นเตือนล่วงหน้า 15 นาทีร่วมกับ Web Notification API
         function requestNotifications() {
             Notification.requestPermission().then(permission => {
                 if(permission === 'granted') {
@@ -156,7 +283,6 @@
             
             scheduleData.classes.forEach(c => {
                 if (c.day === todayDayNum) {
-                    // คำนวณเวลาล่วงหน้า 15 นาทีแบบง่าย
                     const [hour, min] = c.start.split(':').map(Number);
                     let notifyTime = new Date();
                     notifyTime.setHours(hour, min - 15, 0, 0);
@@ -164,7 +290,7 @@
                     
                     if (currentTime === notifyTimeString) {
                         new Notification("ใกล้ถึงเวลาเรียนแล้ว!", {
-                            body: `วิชา ${c.name} กำลังจะเริ่มเวลา ${c.start} ที่ห้อง ${c.room}`,
+                            body: `วิชา ${c.name} กำลังจะเริ่มเวลา ${c.start} ห้อง ${c.room}`,
                             icon: "icon-192.png"
                         });
                     }
@@ -172,18 +298,17 @@
             });
         }
 
-        // Setup เมื่อโหลดหน้าเว็บเสร็จ
+        // เรียกใช้งานฟังก์ชันต่างๆ เมื่อหน้าเว็บโหลดสมบูรณ์
         window.onload = () => {
             renderTodayClasses();
             renderUpcomingEvents();
             if (Notification.permission === 'default') {
                 document.getElementById('notifyBanner').classList.remove('hidden');
             }
-            // ตรวจสอบคลาสทุก 1 นาที เพื่อส่ง Notification
             setInterval(checkUpcomingClassesForNotification, 60000); 
         };
 
-        // ลงทะเบียน Service Worker สำหรับ PWA
+        // ลงทะเบียนสคริปต์ Service Worker สำหรับโหมดใช้งานแบบออฟไลน์ไม่หมดอายุ
         if ('serviceWorker' in navigator) {
             window.addEventListener('load', () => {
                 navigator.serviceWorker.register('./sw.js').then(reg => {
