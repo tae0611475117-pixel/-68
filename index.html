@@ -1,0 +1,196 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Rx Schedule Dashboard</title>
+    <link rel="manifest" href="manifest.json">
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = { darkMode: 'class' }
+    </script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+</head>
+<body class="bg-gray-50 dark:bg-gray-900 text-gray-800 dark:text-gray-100 transition-colors duration-300 font-sans">
+    
+    <div class="max-w-md mx-auto p-4 min-h-screen flex flex-col">
+        <header class="flex justify-between items-center py-4 border-b dark:border-gray-700">
+            <div>
+                <h1 class="text-2xl font-bold text-blue-600 dark:text-blue-400">Rx Dashboard</h1>
+                <p class="text-sm text-gray-500 dark:text-gray-400" id="currentDate">กำลังโหลดวันที่...</p>
+            </div>
+            <button id="themeToggle" class="p-2 rounded-full bg-gray-200 dark:bg-gray-700 hover:bg-gray-300 dark:hover:bg-gray-600 transition">
+                <i class="fas fa-moon dark:hidden"></i>
+                <i class="fas fa-sun hidden dark:block text-yellow-400"></i>
+            </button>
+        </header>
+
+        <div id="notifyBanner" class="mt-4 bg-yellow-100 dark:bg-yellow-900 text-yellow-800 dark:text-yellow-200 p-3 rounded-lg flex justify-between items-center text-sm hidden">
+            <span>เปิดแจ้งเตือนเพื่อไม่พลาดคลาสเรียน</span>
+            <button onclick="requestNotifications()" class="font-bold underline">เปิดใช้งาน</button>
+        </div>
+
+        <section class="mt-6">
+            <h2 class="text-lg font-semibold mb-3 flex items-center">
+                <i class="fas fa-calendar-day mr-2 text-blue-500"></i> ตารางเรียนวันนี้
+            </h2>
+            <div id="todayClasses" class="space-y-3">
+                </div>
+        </section>
+
+        <section class="mt-8 flex-grow">
+            <h2 class="text-lg font-semibold mb-3 flex items-center">
+                <i class="fas fa-stopwatch mr-2 text-red-500"></i> นับถอยหลังสอบ/ส่งงาน
+            </h2>
+            <div id="upcomingEvents" class="space-y-3">
+                </div>
+        </section>
+        
+        <section class="mt-8 mb-6">
+            <h2 class="text-lg font-semibold mb-3">🔗 Quick Links</h2>
+            <div class="grid grid-cols-2 gap-3">
+                <a href="https://lms.ubu.ac.th" target="_blank" class="block p-3 bg-white dark:bg-gray-800 rounded-lg shadow-sm text-center font-medium hover:shadow-md transition">UBU LMS</a>
+                <a href="#" class="block p-3 bg-white dark:bg-gray-800 rounded-lg shadow-sm text-center font-medium hover:shadow-md transition">REG UBU</a>
+            </div>
+        </section>
+    </div>
+
+    <script>
+        // ข้อมูลตารางเรียนและวันสอบเบื้องต้น 
+        const scheduleData = {
+            classes: [
+                { id: "1501 200", name: "ความรู้และทักษะพื้นฐานฯ (Lec)", day: 2, start: "09:00", end: "11:00", room: "A203" },
+                { id: "1502 202", name: "ปฏิบัติการกายวิภาคฯ 2", day: 2, start: "13:00", end: "16:00", room: "B301" },
+                { id: "1503 210", name: "เภสัชพฤกษศาสตร์", day: 4, start: "09:00", end: "11:00", room: "On site" },
+                { id: "1501 200", name: "ความรู้และทักษะพื้นฐานฯ (Lab)", day: 4, start: "13:00", end: "16:00", room: "Lab" },
+                { id: "1502 201-66", name: "กายวิภาคศาสตร์ฯ 2 (Lec)", day: 5, start: "10:00", end: "12:00", room: "A203" }
+            ],
+            events: [
+                { title: "สอบ Posttest สรีรวิทยา", date: "2026-06-19T20:00:00", type: "Quiz" },
+                { title: "สอบกลางภาค 1501 200", date: "2026-08-13T09:00:00", type: "Exam" },
+                { title: "สอบกลางภาค กายวิภาคฯ 2", date: "2026-08-16T09:00:00", type: "Exam" }
+            ]
+        };
+
+        // การจัดการวันที่และ UI เบื้องต้น
+        const now = new Date();
+        const daysThai = ["อาทิตย์", "จันทร์", "อังคาร", "พุธ", "พฤหัสบดี", "ศุกร์", "เสาร์"];
+        document.getElementById('currentDate').innerText = `วัน${daysThai[now.getDay()]}ที่ ${now.toLocaleDateString('th-TH', { day:'numeric', month:'long', year:'numeric'})}`;
+
+        // เรนเดอร์คลาสเรียนของวันนี้
+        function renderTodayClasses() {
+            const todayDayNum = now.getDay();
+            const todayClasses = scheduleData.classes.filter(c => c.day === todayDayNum).sort((a,b) => a.start.localeCompare(b.start));
+            const container = document.getElementById('todayClasses');
+            
+            if(todayClasses.length === 0) {
+                container.innerHTML = `<div class="p-4 bg-gray-100 dark:bg-gray-800 rounded-lg text-center text-gray-500">ไม่มีเรียนวันนี้ พักผ่อนให้เต็มที่ครับ!</div>`;
+                return;
+            }
+
+            container.innerHTML = todayClasses.map(c => `
+                <div class="p-4 bg-white dark:bg-gray-800 border-l-4 border-blue-500 rounded-lg shadow-sm flex justify-between items-center">
+                    <div>
+                        <p class="font-bold text-gray-800 dark:text-gray-100">${c.name}</p>
+                        <p class="text-sm text-gray-500"><i class="fas fa-map-marker-alt"></i> ห้อง: ${c.room}</p>
+                    </div>
+                    <div class="text-right">
+                        <span class="inline-block px-2 py-1 bg-blue-100 dark:bg-blue-900 text-blue-800 dark:text-blue-200 text-xs font-bold rounded">${c.start} - ${c.end}</span>
+                    </div>
+                </div>
+            `).join('');
+        }
+
+        // เรนเดอร์วันสอบ
+        function renderUpcomingEvents() {
+            const container = document.getElementById('upcomingEvents');
+            const futureEvents = scheduleData.events.filter(e => new Date(e.date) > now).sort((a,b) => new Date(a.date) - new Date(b.date));
+            
+            if(futureEvents.length === 0) {
+                container.innerHTML = `<p class="text-gray-500 text-sm">ยังไม่มีกำหนดการสอบเร็วๆ นี้</p>`;
+                return;
+            }
+
+            container.innerHTML = futureEvents.slice(0, 3).map(e => {
+                const eventDate = new Date(e.date);
+                const diffTime = Math.abs(eventDate - now);
+                const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+                return `
+                <div class="p-3 bg-white dark:bg-gray-800 rounded-lg shadow-sm border border-red-100 dark:border-red-900 flex justify-between items-center">
+                    <div>
+                        <p class="font-bold text-sm">${e.title}</p>
+                        <p class="text-xs text-gray-500">${eventDate.toLocaleDateString('th-TH')} | ${eventDate.toLocaleTimeString('th-TH', {hour: '2-digit', minute:'2-digit'})}</p>
+                    </div>
+                    <div class="text-red-500 font-bold text-sm">
+                        อีก ${diffDays} วัน
+                    </div>
+                </div>
+            `}).join('');
+        }
+
+        // ระบบ Dark Mode
+        const themeToggle = document.getElementById('themeToggle');
+        const htmlBody = document.documentElement;
+        if (localStorage.theme === 'dark' || (!('theme' in localStorage) && window.matchMedia('(prefers-color-scheme: dark)').matches)) {
+            htmlBody.classList.add('dark');
+        }
+        themeToggle.addEventListener('click', () => {
+            htmlBody.classList.toggle('dark');
+            localStorage.theme = htmlBody.classList.contains('dark') ? 'dark' : 'light';
+        });
+
+        // ระบบแจ้งเตือน PWA Notifications
+        function requestNotifications() {
+            Notification.requestPermission().then(permission => {
+                if(permission === 'granted') {
+                    document.getElementById('notifyBanner').classList.add('hidden');
+                    alert("เปิดการแจ้งเตือนสำเร็จ ระบบจะเตือนก่อนเวลาเรียน 15 นาที");
+                }
+            });
+        }
+
+        function checkUpcomingClassesForNotification() {
+            if (Notification.permission !== "granted") return;
+            const todayDayNum = new Date().getDay();
+            const currentTime = new Date().toLocaleTimeString('th-TH', { hour: '2-digit', minute: '2-digit', hour12: false });
+            
+            scheduleData.classes.forEach(c => {
+                if (c.day === todayDayNum) {
+                    // คำนวณเวลาล่วงหน้า 15 นาทีแบบง่าย
+                    const [hour, min] = c.start.split(':').map(Number);
+                    let notifyTime = new Date();
+                    notifyTime.setHours(hour, min - 15, 0, 0);
+                    const notifyTimeString = notifyTime.toLocaleTimeString('th-TH', { hour: '2-digit', minute: '2-digit', hour12: false });
+                    
+                    if (currentTime === notifyTimeString) {
+                        new Notification("ใกล้ถึงเวลาเรียนแล้ว!", {
+                            body: `วิชา ${c.name} กำลังจะเริ่มเวลา ${c.start} ที่ห้อง ${c.room}`,
+                            icon: "icon-192.png"
+                        });
+                    }
+                }
+            });
+        }
+
+        // Setup เมื่อโหลดหน้าเว็บเสร็จ
+        window.onload = () => {
+            renderTodayClasses();
+            renderUpcomingEvents();
+            if (Notification.permission === 'default') {
+                document.getElementById('notifyBanner').classList.remove('hidden');
+            }
+            // ตรวจสอบคลาสทุก 1 นาที เพื่อส่ง Notification
+            setInterval(checkUpcomingClassesForNotification, 60000); 
+        };
+
+        // ลงทะเบียน Service Worker สำหรับ PWA
+        if ('serviceWorker' in navigator) {
+            window.addEventListener('load', () => {
+                navigator.serviceWorker.register('./sw.js').then(reg => {
+                    console.log('ServiceWorker registered:', reg.scope);
+                }).catch(err => console.log('ServiceWorker error:', err));
+            });
+        }
+    </script>
+</body>
+</html>
