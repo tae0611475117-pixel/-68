@@ -1,4 +1,4 @@
-const CACHE_NAME = 'rx-schedule-v1';
+const CACHE_NAME = 'rx-schedule-v2';
 const urlsToCache = [
   './',
   './index.html',
